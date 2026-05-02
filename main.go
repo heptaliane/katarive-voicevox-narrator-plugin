@@ -1,40 +1,63 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"os"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	katarive "github.com/heptaliane/katarive-go-sdk"
 	pb "github.com/heptaliane/katarive-go-sdk/gen/pb/plugin/v1"
+
+	"github.com/heptaliane/katarive-voicevox-narrator-plugin/internal/speaker"
 )
 
 const NAME string = "voicevox"
 const VERSION string = "v1"
+const DEFAULT_SERVER string = "http://localhost:50021"
+const ENV_SERVER string = "KATARIVE_VOICEVOX_SERVER"
 
 var SupportedEncoding []pb.AudioEncoding = []pb.AudioEncoding{
-	pb.AudioEncoding_AUDIO_ENCODING_MP3,
-	pb.AudioEncoding_AUDIO_ENCODING_M4A,
+	pb.AudioEncoding_AUDIO_ENCODING_WAV,
 }
 
 type VoiceVoxNarratorService struct {
 	pb.UnimplementedNarratorServiceServer
-	Logger hclog.Logger
+
+	Speaker speaker.VoiceVoxHandler
+	Logger  hclog.Logger
 }
 
 func (n *VoiceVoxNarratorService) Narrate(
 	ctx context.Context,
 	req *pb.NarrateRequest,
 ) (*pb.NarrateResponse, error) {
-	// TODO: implement this
-	return nil, nil
+	n.Logger.Debug("Start generating narration", "output", req.GetPath())
+	audio, err := n.Speaker.Narrate(ctx, req.GetText())
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := os.Create(req.GetPath())
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	n.Logger.Debug("Output narration", "output", req.GetPath())
+	_, err = io.Copy(file, bytes.NewReader(audio))
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.NarrateResponse{}, nil
 }
 func (n *VoiceVoxNarratorService) GetNarratorServiceMetadata(
 	ctx context.Context,
 	req *pb.GetNarratorServiceMetadataRequest,
 ) (*pb.GetNarratorServiceMetadataResponse, error) {
-	// TODO: implement this
 	return &pb.GetNarratorServiceMetadataResponse{
 		Name:              NAME,
 		Version:           VERSION,
@@ -45,18 +68,40 @@ func (n *VoiceVoxNarratorService) GetNarratorServiceMetadata(
 // Check NarratorServiceServer implementation
 var _ pb.NarratorServiceServer = new(VoiceVoxNarratorService)
 
+func GetenvWithDefault(key string, defaultValue string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return defaultValue
+}
+
 func main() {
+	ctx := context.Background()
+
+	server := GetenvWithDefault(ENV_SERVER, DEFAULT_SERVER)
+
 	logger := hclog.New(&hclog.LoggerOptions{
 		Level:  hclog.Trace,
 		Output: os.Stderr,
 	})
+
+	sh, err := speaker.NewHttpVoiceVoxHandler(ctx, server)
+	if err != nil {
+		logger.Error(
+			"Failed to establish VoiceVox server",
+			"error", err,
+			"server", server,
+		)
+		os.Exit(1)
+	}
 
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: katarive.Handshake,
 		Plugins: map[string]plugin.Plugin{
 			"narrator": &katarive.NarratorPlugin{
 				Impl: &VoiceVoxNarratorService{
-					Logger: logger,
+					Speaker: sh,
+					Logger:  logger,
 				},
 			},
 		},
