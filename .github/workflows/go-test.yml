@@ -17,7 +17,7 @@ jobs:
       uses: actions/setup-go@v4
 
     - name: Test
-      run: go test -v ./...
+      run: make test
 
   check-format:
     runs-on: ubuntu-latest
