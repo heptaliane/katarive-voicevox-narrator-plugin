@@ -5,7 +5,7 @@ TARGET := cpu
 build:
 	go build .
 
-test:
+test: run-voicevox
 	go test ./...
 
 format:

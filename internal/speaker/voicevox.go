@@ -1,4 +1,4 @@
-package main
+package speaker
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/go-hclog"
 
 	"github.com/heptaliane/katarive-voicevox-narrator-plugin/gen/voicevox"
+	"github.com/heptaliane/katarive-voicevox-narrator-plugin/internal/errors"
 )
 
 const DEFAULT_SPEAKER_NAME string = "ずんだもん"
@@ -86,7 +87,7 @@ func (h *HttpVoiceVoxHandler) Narrate(
 		return nil, err
 	}
 	if aq.StatusCode() != http.StatusOK {
-		return nil, &VoiceVoxConnectionError{Body: aq.Body}
+		return nil, &errors.VoiceVoxConnectionError{Body: aq.Body}
 	}
 
 	sp := &voicevox.SynthesisParams{
@@ -97,7 +98,7 @@ func (h *HttpVoiceVoxHandler) Narrate(
 		return nil, err
 	}
 	if res.StatusCode() != http.StatusOK {
-		return nil, &VoiceVoxConnectionError{Body: res.Body}
+		return nil, &errors.VoiceVoxConnectionError{Body: res.Body}
 	}
 
 	return res.Body, nil
@@ -121,7 +122,7 @@ func (h *HttpVoiceVoxHandler) getVoiceVoxId(opts *voiceVoxOption) (int, error) {
 			return speaker.id, nil
 		}
 	}
-	return 0, &UnsupportedSpeakerError{
+	return 0, &errors.UnsupportedSpeakerError{
 		Name:  opts.speakerName,
 		Style: opts.speakerStyle,
 	}
@@ -143,7 +144,7 @@ func NewHttpVoiceVoxHandler(
 		return nil, err
 	}
 	if res.StatusCode() != http.StatusOK {
-		return nil, &VoiceVoxConnectionError{Body: res.Body}
+		return nil, &errors.VoiceVoxConnectionError{Body: res.Body}
 	}
 
 	var speakers []*voiceVoiceSpeaker
