@@ -4,8 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/hashicorp/go-hclog"
-
 	"github.com/heptaliane/katarive-voicevox-narrator-plugin/gen/voicevox"
 	"github.com/heptaliane/katarive-voicevox-narrator-plugin/internal/errors"
 )
@@ -59,8 +57,6 @@ func newVoiceVoxOption() *voiceVoxOption {
 type HttpVoiceVoxHandler struct {
 	speakers []*voiceVoiceSpeaker
 	client   voicevox.ClientWithResponsesInterface
-
-	logger hclog.Logger
 }
 
 func (h *HttpVoiceVoxHandler) Narrate(
@@ -131,7 +127,6 @@ func (h *HttpVoiceVoxHandler) getVoiceVoxId(opts *voiceVoxOption) (int, error) {
 func NewHttpVoiceVoxHandler(
 	ctx context.Context,
 	server string,
-	logger hclog.Logger,
 ) (*HttpVoiceVoxHandler, error) {
 	client, err := voicevox.NewClientWithResponses(server)
 	if err != nil {
@@ -161,6 +156,5 @@ func NewHttpVoiceVoxHandler(
 	return &HttpVoiceVoxHandler{
 		client:   client,
 		speakers: speakers,
-		logger:   logger,
 	}, nil
 }

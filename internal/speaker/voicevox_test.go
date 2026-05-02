@@ -4,8 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/go-hclog"
-
 	"github.com/heptaliane/katarive-voicevox-narrator-plugin/internal/errors"
 	"github.com/heptaliane/katarive-voicevox-narrator-plugin/internal/speaker"
 )
@@ -16,7 +14,7 @@ func TestHttpVoiceVoxHandlerNarrate(t *testing.T) {
 	server := "http://localhost:50021"
 
 	ctx := context.Background()
-	handler, err := speaker.NewHttpVoiceVoxHandler(ctx, server, hclog.New(nil))
+	handler, err := speaker.NewHttpVoiceVoxHandler(ctx, server)
 	if err != nil {
 		t.Fatalf("Failed to initialize handler: %v", err)
 	}
