@@ -10,6 +10,14 @@ import (
 	pb "github.com/heptaliane/katarive-go-sdk/gen/pb/plugin/v1"
 )
 
+const NAME string = "voicevox"
+const VERSION string = "v1"
+
+var SupportedEncoding []pb.AudioEncoding = []pb.AudioEncoding{
+	pb.AudioEncoding_AUDIO_ENCODING_MP3,
+	pb.AudioEncoding_AUDIO_ENCODING_M4A,
+}
+
 type VoiceVoxNarratorService struct {
 	pb.UnimplementedNarratorServiceServer
 	Logger hclog.Logger
@@ -27,7 +35,11 @@ func (n *VoiceVoxNarratorService) GetNarratorServiceMetadata(
 	req *pb.GetNarratorServiceMetadataRequest,
 ) (*pb.GetNarratorServiceMetadataResponse, error) {
 	// TODO: implement this
-	return nil, nil
+	return &pb.GetNarratorServiceMetadataResponse{
+		Name:              NAME,
+		Version:           VERSION,
+		SupportedEncoding: SupportedEncoding,
+	}, nil
 }
 
 // Check NarratorServiceServer implementation
