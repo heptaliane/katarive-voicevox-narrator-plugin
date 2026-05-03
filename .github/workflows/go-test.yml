@@ -16,6 +16,9 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
 
+    - name: Setup FFmpeg
+      uses: federicocarboni/setup-ffmpeg@v3
+
     - name: Test
       run: make test
 
