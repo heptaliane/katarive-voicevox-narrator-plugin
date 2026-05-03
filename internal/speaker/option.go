@@ -1,7 +1,5 @@
 package speaker
 
-
-
 type NarrateOptions struct {
 	speakerName  string
 	speakerStyle string

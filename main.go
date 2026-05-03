@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"io"
 	"os"
 
 	"github.com/hashicorp/go-hclog"
