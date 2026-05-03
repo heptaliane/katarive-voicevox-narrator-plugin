@@ -20,24 +20,24 @@ func TestHttpVoiceVoxHandlerNarrate(t *testing.T) {
 	}
 
 	cases := map[string]struct {
-		options       []speaker.VoiceVoxOption
+		options       []speaker.NarrateOption
 		expectedError error
 	}{
 		"default": {
-			options: []speaker.VoiceVoxOption{},
+			options: []speaker.NarrateOption{},
 		},
 		"with style": {
-			options: []speaker.VoiceVoxOption{
+			options: []speaker.NarrateOption{
 				speaker.WithSpeakerStyle("ささやき"),
 			},
 		},
 		"with speaker": {
-			options: []speaker.VoiceVoxOption{
+			options: []speaker.NarrateOption{
 				speaker.WithSpeakerName("四国めたん"),
 			},
 		},
 		"invalid style": {
-			options: []speaker.VoiceVoxOption{
+			options: []speaker.NarrateOption{
 				speaker.WithSpeakerStyle("invalid style"),
 			},
 			expectedError: &errors.UnsupportedSpeakerError{
@@ -46,7 +46,7 @@ func TestHttpVoiceVoxHandlerNarrate(t *testing.T) {
 			},
 		},
 		"invalid speaker": {
-			options: []speaker.VoiceVoxOption{
+			options: []speaker.NarrateOption{
 				speaker.WithSpeakerName("invalid speaker"),
 			},
 			expectedError: &errors.UnsupportedSpeakerError{

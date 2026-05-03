@@ -15,37 +15,8 @@ const DEFAULT_SPEAKER_STYLE string = "ノーマル"
 // Interfaces for VoiceVox handlers
 // ==============================
 type VoiceVoxHandler interface {
-	SpeakerId(opts ...VoiceVoxOption) (int, error)
+	SpeakerId(opts ...NarrateOption) (int, error)
 	Narrate(ctx context.Context, text string, speakerId int) ([]byte, error)
-}
-
-// -----------------
-// Helper components
-// -----------------
-
-type voiceVoxOption struct {
-	speakerName  string
-	speakerStyle string
-}
-
-type VoiceVoxOption func(opt *voiceVoxOption)
-
-func WithSpeakerName(name string) VoiceVoxOption {
-	return func(opt *voiceVoxOption) {
-		opt.speakerName = name
-	}
-}
-func WithSpeakerStyle(style string) VoiceVoxOption {
-	return func(opt *voiceVoxOption) {
-		opt.speakerStyle = style
-	}
-}
-
-func newVoiceVoxOption() *voiceVoxOption {
-	return &voiceVoxOption{
-		speakerName:  DEFAULT_SPEAKER_NAME,
-		speakerStyle: DEFAULT_SPEAKER_STYLE,
-	}
 }
 
 // ============================
@@ -96,8 +67,8 @@ func (h *HttpVoiceVoxHandler) Narrate(
 
 	return res.Body, nil
 }
-func (h *HttpVoiceVoxHandler) SpeakerId(opts ...VoiceVoxOption) (int, error) {
-	options := newVoiceVoxOption()
+func (h *HttpVoiceVoxHandler) SpeakerId(opts ...NarrateOption) (int, error) {
+	options := newNarrateOptions()
 	for _, opt := range opts {
 		opt(options)
 	}
