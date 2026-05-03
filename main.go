@@ -35,23 +35,7 @@ func (n *VoiceVoxNarratorService) Narrate(
 	req *pb.NarrateRequest,
 ) (*pb.NarrateResponse, error) {
 	n.Logger.Debug("Start generating narration", "output", req.GetPath())
-	audio, err := n.Speaker.Narrate(ctx, req.GetText())
-	if err != nil {
-		return nil, err
-	}
-
-	file, err := os.Create(req.GetPath())
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	n.Logger.Debug("Output narration", "output", req.GetPath())
-	_, err = io.Copy(file, bytes.NewReader(audio))
-	if err != nil {
-		return nil, err
-	}
-
+	// TODO: implementation
 	return &pb.NarrateResponse{}, nil
 }
 func (n *VoiceVoxNarratorService) GetNarratorServiceMetadata(

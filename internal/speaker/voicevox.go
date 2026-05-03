@@ -15,7 +15,8 @@ const DEFAULT_SPEAKER_STYLE string = "ノーマル"
 // Interfaces for VoiceVox handlers
 // ==============================
 type VoiceVoxHandler interface {
-	Narrate(ctx context.Context, text string, opts ...VoiceVoxOption) ([]byte, error)
+	SpeakerId(opts ...VoiceVoxOption) (int, error)
+	Narrate(ctx context.Context, text string, speakerId int) ([]byte, error)
 }
 
 // -----------------
@@ -62,21 +63,11 @@ type HttpVoiceVoxHandler struct {
 func (h *HttpVoiceVoxHandler) Narrate(
 	ctx context.Context,
 	text string,
-	opts ...VoiceVoxOption,
+	speakerId int,
 ) ([]byte, error) {
-	options := newVoiceVoxOption()
-	for _, opt := range opts {
-		opt(options)
-	}
-
-	speaker, err := h.getVoiceVoxId(options)
-	if err != nil {
-		return nil, err
-	}
-
 	aqp := &voicevox.AudioQueryParams{
 		Text:    text,
-		Speaker: speaker,
+		Speaker: speakerId,
 	}
 	aq, err := h.client.AudioQueryWithResponse(ctx, aqp)
 	if err != nil {
@@ -90,7 +81,7 @@ func (h *HttpVoiceVoxHandler) Narrate(
 	}
 
 	sp := &voicevox.SynthesisParams{
-		Speaker: speaker,
+		Speaker: speakerId,
 	}
 	res, err := h.client.SynthesisWithResponse(ctx, sp, *aq.JSON200)
 	if err != nil {
@@ -105,6 +96,22 @@ func (h *HttpVoiceVoxHandler) Narrate(
 
 	return res.Body, nil
 }
+func (h *HttpVoiceVoxHandler) SpeakerId(opts ...VoiceVoxOption) (int, error) {
+	options := newVoiceVoxOption()
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	for _, speaker := range h.speakers {
+		if options.speakerName == speaker.name && options.speakerStyle == speaker.style {
+			return speaker.id, nil
+		}
+	}
+	return 0, &errors.UnsupportedSpeakerError{
+		Name:  options.speakerName,
+		Style: options.speakerStyle,
+	}
+}
 
 // Ensure VoiceVoxHandler implementation
 var _ VoiceVoxHandler = new(HttpVoiceVoxHandler)
@@ -116,18 +123,6 @@ type voiceVoiceSpeaker struct {
 	name  string
 	style string
 	id    int
-}
-
-func (h *HttpVoiceVoxHandler) getVoiceVoxId(opts *voiceVoxOption) (int, error) {
-	for _, speaker := range h.speakers {
-		if opts.speakerName == speaker.name && opts.speakerStyle == speaker.style {
-			return speaker.id, nil
-		}
-	}
-	return 0, &errors.UnsupportedSpeakerError{
-		Name:  opts.speakerName,
-		Style: opts.speakerStyle,
-	}
 }
 
 func NewHttpVoiceVoxHandler(

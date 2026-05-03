@@ -60,8 +60,16 @@ func TestHttpVoiceVoxHandlerNarrate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			ctx := context.Background()
-			_, err := handler.Narrate(ctx, "unittest", tc.options...)
+			err := func() error {
+				ctx := context.Background()
+				id, err := handler.SpeakerId(tc.options...)
+				if err != nil {
+					return err
+				}
+
+				_, err = handler.Narrate(ctx, "unittest", id)
+				return err
+			}()
 
 			if tc.expectedError == nil {
 				if err != nil {
