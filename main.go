@@ -94,6 +94,7 @@ func main() {
 		)
 		os.Exit(1)
 	}
+	logger.Info("Connection with VoiceVox server is established.")
 
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: katarive.Handshake,

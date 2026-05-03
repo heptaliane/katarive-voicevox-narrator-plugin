@@ -83,7 +83,10 @@ func (h *HttpVoiceVoxHandler) Narrate(
 		return nil, err
 	}
 	if aq.StatusCode() != http.StatusOK {
-		return nil, &errors.VoiceVoxConnectionError{Body: aq.Body}
+		return nil, &errors.VoiceVoxConnectionError{
+			Body:     aq.Body,
+			Endpoint: "/audio_query",
+		}
 	}
 
 	sp := &voicevox.SynthesisParams{
@@ -94,7 +97,10 @@ func (h *HttpVoiceVoxHandler) Narrate(
 		return nil, err
 	}
 	if res.StatusCode() != http.StatusOK {
-		return nil, &errors.VoiceVoxConnectionError{Body: res.Body}
+		return nil, &errors.VoiceVoxConnectionError{
+			Body:     res.Body,
+			Endpoint: "/synthesis",
+		}
 	}
 
 	return res.Body, nil
@@ -139,7 +145,10 @@ func NewHttpVoiceVoxHandler(
 		return nil, err
 	}
 	if res.StatusCode() != http.StatusOK {
-		return nil, &errors.VoiceVoxConnectionError{Body: res.Body}
+		return nil, &errors.VoiceVoxConnectionError{
+			Body:     res.Body,
+			Endpoint: "/speakers",
+		}
 	}
 
 	var speakers []*voiceVoiceSpeaker

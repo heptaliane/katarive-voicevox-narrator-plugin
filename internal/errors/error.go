@@ -16,11 +16,16 @@ func (e *UnsupportedSpeakerError) Error() string {
 var _ error = new(UnsupportedSpeakerError)
 
 type VoiceVoxConnectionError struct {
-	Body []byte
+	Body     []byte
+	Endpoint string
 }
 
 func (e *VoiceVoxConnectionError) Error() string {
-	return fmt.Sprintf("Connection with VoiceVox failed: %s", string(e.Body))
+	return fmt.Sprintf(
+		"Connection with VoiceVox failed (%s): %s",
+		string(e.Endpoint),
+		string(e.Body),
+	)
 }
 
 var _ error = new(VoiceVoxConnectionError)
