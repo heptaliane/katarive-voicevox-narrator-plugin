@@ -16,6 +16,7 @@ const NAME string = "voicevox"
 const VERSION string = "v1"
 const DEFAULT_SERVER string = "http://localhost:50021"
 const ENV_SERVER string = "KATARIVE_VOICEVOX_SERVER"
+const CACHE_DIR string = ".cache/katarive-voicevox"
 
 var SupportedEncoding []pb.AudioEncoding = []pb.AudioEncoding{
 	pb.AudioEncoding_AUDIO_ENCODING_WAV,
@@ -24,7 +25,7 @@ var SupportedEncoding []pb.AudioEncoding = []pb.AudioEncoding{
 type VoiceVoxNarratorService struct {
 	pb.UnimplementedNarratorServiceServer
 
-	Speaker speaker.VoiceVoxHandler
+	Speaker speaker.NarrationGenerator
 	Logger  hclog.Logger
 }
 
@@ -33,8 +34,8 @@ func (n *VoiceVoxNarratorService) Narrate(
 	req *pb.NarrateRequest,
 ) (*pb.NarrateResponse, error) {
 	n.Logger.Debug("Start generating narration", "output", req.GetPath())
-	// TODO: implementation
-	return &pb.NarrateResponse{}, nil
+	err := n.Speaker.Do(ctx, req.GetPath(), req.GetText())
+	return &pb.NarrateResponse{}, err
 }
 func (n *VoiceVoxNarratorService) GetNarratorServiceMetadata(
 	ctx context.Context,
@@ -67,7 +68,7 @@ func main() {
 		Output: os.Stderr,
 	})
 
-	sh, err := speaker.NewHttpVoiceVoxHandler(ctx, server)
+	handler, err := speaker.NewHttpVoiceVoxHandler(ctx, server)
 	if err != nil {
 		logger.Error(
 			"Failed to establish VoiceVox server",
@@ -78,12 +79,19 @@ func main() {
 	}
 	logger.Info("Connection with VoiceVox server is established.")
 
+	os.MkdirAll(CACHE_DIR, 0755)
+	narrator := &speaker.ChunkedNarrationGenerator{
+		Handler:  handler,
+		Chunker:  new(speaker.LineBreakTextChunker),
+		CacheDir: CACHE_DIR,
+	}
+
 	plugin.Serve(&plugin.ServeConfig{
 		HandshakeConfig: katarive.Handshake,
 		Plugins: map[string]plugin.Plugin{
 			"narrator": &katarive.NarratorPlugin{
 				Impl: &VoiceVoxNarratorService{
-					Speaker: sh,
+					Speaker: narrator,
 					Logger:  logger,
 				},
 			},
