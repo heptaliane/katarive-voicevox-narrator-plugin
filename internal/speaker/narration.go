@@ -10,6 +10,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	pb "github.com/heptaliane/katarive-go-sdk/gen/pb/plugin/v1"
 )
 
 // =================================
@@ -50,10 +52,12 @@ func (g *ChunkedNarrationGenerator) Do(
 	basedir := filepath.Join(g.CacheDir, fmt.Sprintf("%03d", id))
 	os.MkdirAll(basedir, 0755)
 
+	ext := audioExtension(options.encoding)
+
 	var ps []string
 	chunks := g.Chunker.Chunk(text)
 	for chunk := range chunks {
-		p := filepath.Join(basedir, fmt.Sprintf("%s.wav", filename(chunk)))
+		p := filepath.Join(basedir, fmt.Sprintf("%s.%s", filename(chunk), ext))
 		ps = append(ps, p)
 		if _, err = os.Stat(p); err == nil {
 			continue
@@ -63,6 +67,13 @@ func (g *ChunkedNarrationGenerator) Do(
 		if err != nil {
 			return err
 		}
+
+		encoder := getEncoder(options.encoding)
+		audio, err = encoder(audio)
+		if err != nil {
+			return err
+		}
+
 		err = saveAudio(p, audio)
 		if err != nil {
 			return err
@@ -117,4 +128,22 @@ func concatAudio(files []string, dest string) error {
 	}
 
 	return nil
+}
+func audioExtension(encoding pb.AudioEncoding) string {
+	switch encoding {
+	case pb.AudioEncoding_AUDIO_ENCODING_MP3:
+		return "mp3"
+	case pb.AudioEncoding_AUDIO_ENCODING_M4A:
+		return "m4a"
+	}
+	return "wav"
+}
+func getEncoder(encoding pb.AudioEncoding) AudioEncoder {
+	switch encoding {
+	case pb.AudioEncoding_AUDIO_ENCODING_MP3:
+		return MP3Encoder
+	case pb.AudioEncoding_AUDIO_ENCODING_M4A:
+		return M4AEncoder
+	}
+	return NopEncoder
 }

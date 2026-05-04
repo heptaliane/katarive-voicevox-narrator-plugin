@@ -20,6 +20,8 @@ const CACHE_DIR string = ".cache/katarive-voicevox"
 
 var SupportedEncoding []pb.AudioEncoding = []pb.AudioEncoding{
 	pb.AudioEncoding_AUDIO_ENCODING_WAV,
+	pb.AudioEncoding_AUDIO_ENCODING_MP3,
+	pb.AudioEncoding_AUDIO_ENCODING_M4A,
 }
 
 type VoiceVoxNarratorService struct {
@@ -34,7 +36,12 @@ func (n *VoiceVoxNarratorService) Narrate(
 	req *pb.NarrateRequest,
 ) (*pb.NarrateResponse, error) {
 	n.Logger.Debug("Start generating narration", "output", req.GetPath())
-	err := n.Speaker.Do(ctx, req.GetPath(), req.GetText())
+	err := n.Speaker.Do(
+		ctx,
+		req.GetPath(),
+		req.GetText(),
+		speaker.WithEncoding(req.GetEncoding()),
+	)
 	return &pb.NarrateResponse{}, err
 }
 func (n *VoiceVoxNarratorService) GetNarratorServiceMetadata(
