@@ -20,35 +20,25 @@ func TestHttpVoiceVoxHandlerNarrate(t *testing.T) {
 	}
 
 	cases := map[string]struct {
-		options       []speaker.NarrateOption
+		speakerName   string
+		speakerStyle  string
 		expectedError error
 	}{
 		"default": {
-			options: []speaker.NarrateOption{},
-		},
-		"with style": {
-			options: []speaker.NarrateOption{
-				speaker.WithSpeakerStyle("ささやき"),
-			},
-		},
-		"with speaker": {
-			options: []speaker.NarrateOption{
-				speaker.WithSpeakerName("四国めたん"),
-			},
+			speakerName:  speaker.DEFAULT_SPEAKER_NAME,
+			speakerStyle: speaker.DEFAULT_SPEAKER_STYLE,
 		},
 		"invalid style": {
-			options: []speaker.NarrateOption{
-				speaker.WithSpeakerStyle("invalid style"),
-			},
+			speakerName:  speaker.DEFAULT_SPEAKER_NAME,
+			speakerStyle: "invalid style",
 			expectedError: &errors.UnsupportedSpeakerError{
 				Style: "invalid style",
 				Name:  speaker.DEFAULT_SPEAKER_NAME,
 			},
 		},
 		"invalid speaker": {
-			options: []speaker.NarrateOption{
-				speaker.WithSpeakerName("invalid speaker"),
-			},
+			speakerName:  "invalid speaker",
+			speakerStyle: speaker.DEFAULT_SPEAKER_STYLE,
 			expectedError: &errors.UnsupportedSpeakerError{
 				Style: speaker.DEFAULT_SPEAKER_STYLE,
 				Name:  "invalid speaker",
@@ -62,7 +52,7 @@ func TestHttpVoiceVoxHandlerNarrate(t *testing.T) {
 
 			err := func() error {
 				ctx := context.Background()
-				id, err := handler.SpeakerId(tc.options...)
+				id, err := handler.SpeakerId(tc.speakerName, tc.speakerStyle)
 				if err != nil {
 					return err
 				}

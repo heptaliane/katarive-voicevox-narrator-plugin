@@ -8,14 +8,11 @@ import (
 	"github.com/heptaliane/katarive-voicevox-narrator-plugin/internal/errors"
 )
 
-const DEFAULT_SPEAKER_NAME string = "ずんだもん"
-const DEFAULT_SPEAKER_STYLE string = "ノーマル"
-
 // ==============================
 // Interfaces for VoiceVox handlers
 // ==============================
 type VoiceVoxHandler interface {
-	SpeakerId(opts ...NarrateOption) (int, error)
+	SpeakerId(name, style string) (int, error)
 	Narrate(ctx context.Context, text string, speakerId int) ([]byte, error)
 }
 
@@ -67,20 +64,15 @@ func (h *HttpVoiceVoxHandler) Narrate(
 
 	return res.Body, nil
 }
-func (h *HttpVoiceVoxHandler) SpeakerId(opts ...NarrateOption) (int, error) {
-	options := newNarrateOptions()
-	for _, opt := range opts {
-		opt(options)
-	}
-
+func (h *HttpVoiceVoxHandler) SpeakerId(name, style string) (int, error) {
 	for _, speaker := range h.speakers {
-		if options.speakerName == speaker.name && options.speakerStyle == speaker.style {
+		if name == speaker.name && style == speaker.style {
 			return speaker.id, nil
 		}
 	}
 	return 0, &errors.UnsupportedSpeakerError{
-		Name:  options.speakerName,
-		Style: options.speakerStyle,
+		Name:  name,
+		Style: style,
 	}
 }
 

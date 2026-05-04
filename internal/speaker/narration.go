@@ -38,7 +38,12 @@ func (g *ChunkedNarrationGenerator) Do(
 	path, text string,
 	opts ...NarrateOption,
 ) error {
-	id, err := g.Handler.SpeakerId(opts...)
+	options := newNarrateOptions()
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	id, err := g.Handler.SpeakerId(options.speakerName, options.speakerStyle)
 	if err != nil {
 		return err
 	}
