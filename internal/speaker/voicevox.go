@@ -12,7 +12,6 @@ import (
 // Interfaces for VoiceVox handlers
 // ==============================
 type VoiceVoxHandler interface {
-	SpeakerId(name, style string) (int, error)
 	Narrate(ctx context.Context, text string, speakerId int) ([]byte, error)
 	Speakers() []*VoiceVoxSpeaker
 }
@@ -64,17 +63,6 @@ func (h *HttpVoiceVoxHandler) Narrate(
 	}
 
 	return res.Body, nil
-}
-func (h *HttpVoiceVoxHandler) SpeakerId(name, style string) (int, error) {
-	for _, speaker := range h.speakers {
-		if name == speaker.Name && style == speaker.Style {
-			return speaker.Id, nil
-		}
-	}
-	return 0, &errors.UnsupportedSpeakerError{
-		Name:  name,
-		Style: style,
-	}
 }
 func (h *HttpVoiceVoxHandler) Speakers() []*VoiceVoxSpeaker {
 	return h.speakers

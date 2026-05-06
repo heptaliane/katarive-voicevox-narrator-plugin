@@ -46,11 +46,7 @@ func (g *ChunkedNarrationGenerator) Do(
 		opt(options)
 	}
 
-	id, err := g.Handler.SpeakerId(options.speakerName, options.speakerStyle)
-	if err != nil {
-		return err
-	}
-	basedir := filepath.Join(g.CacheDir, fmt.Sprintf("%03d", id))
+	basedir := filepath.Join(g.CacheDir, fmt.Sprintf("%03d", options.speakerId))
 	os.MkdirAll(basedir, 0755)
 
 	ext := audioExtension(options.encoding)
@@ -60,11 +56,11 @@ func (g *ChunkedNarrationGenerator) Do(
 	for chunk := range chunks {
 		p := filepath.Join(basedir, fmt.Sprintf("%s.%s", filename(chunk), ext))
 		ps = append(ps, p)
-		if _, err = os.Stat(p); err == nil {
+		if _, err := os.Stat(p); err == nil {
 			continue
 		}
 
-		audio, err := g.Handler.Narrate(ctx, chunk, id)
+		audio, err := g.Handler.Narrate(ctx, chunk, options.speakerId)
 		if err != nil {
 			return err
 		}

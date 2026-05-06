@@ -41,6 +41,7 @@ func (n *VoiceVoxNarratorService) Narrate(
 		req.GetPath(),
 		req.GetText(),
 		speaker.WithEncoding(req.GetEncoding()),
+		speaker.WithSpeakerId(int(req.GetSpeakerId())),
 	)
 	return &pb.NarrateResponse{}, err
 }

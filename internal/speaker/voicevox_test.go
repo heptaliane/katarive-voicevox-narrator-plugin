@@ -20,28 +20,17 @@ func TestHttpVoiceVoxHandlerNarrate(t *testing.T) {
 	}
 
 	cases := map[string]struct {
-		speakerName   string
-		speakerStyle  string
+		speakerId     int
 		expectedError error
 	}{
 		"default": {
-			speakerName:  speaker.DEFAULT_SPEAKER_NAME,
-			speakerStyle: speaker.DEFAULT_SPEAKER_STYLE,
+			speakerId: 3,
 		},
-		"invalid style": {
-			speakerName:  speaker.DEFAULT_SPEAKER_NAME,
-			speakerStyle: "invalid style",
-			expectedError: &errors.UnsupportedSpeakerError{
-				Style: "invalid style",
-				Name:  speaker.DEFAULT_SPEAKER_NAME,
-			},
-		},
-		"invalid speaker": {
-			speakerName:  "invalid speaker",
-			speakerStyle: speaker.DEFAULT_SPEAKER_STYLE,
-			expectedError: &errors.UnsupportedSpeakerError{
-				Style: speaker.DEFAULT_SPEAKER_STYLE,
-				Name:  "invalid speaker",
+		"invalid id": {
+			speakerId: -1,
+			expectedError: &errors.VoiceVoxConnectionError{
+				Body:     []byte(`{"detail":"Internal Server Error"}`),
+				Endpoint: "/audio_query",
 			},
 		},
 	}
@@ -52,12 +41,11 @@ func TestHttpVoiceVoxHandlerNarrate(t *testing.T) {
 
 			err := func() error {
 				ctx := context.Background()
-				id, err := handler.SpeakerId(tc.speakerName, tc.speakerStyle)
 				if err != nil {
 					return err
 				}
 
-				_, err = handler.Narrate(ctx, "unittest", id)
+				_, err = handler.Narrate(ctx, "unittest", tc.speakerId)
 				return err
 			}()
 

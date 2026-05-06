@@ -6,10 +6,12 @@ import (
 
 const DEFAULT_SPEAKER_NAME string = "ずんだもん"
 const DEFAULT_SPEAKER_STYLE string = "ノーマル"
+const DEFAULT_SPEAKER_ID int = 3 // ずんだもん (ノーマル)
 
 type narrateOptions struct {
 	speakerName  string
 	speakerStyle string
+	speakerId    int
 	encoding     pb.AudioEncoding
 }
 
@@ -25,6 +27,11 @@ func WithSpeakerStyle(style string) NarrateOption {
 		opt.speakerStyle = style
 	}
 }
+func WithSpeakerId(speakerId int) NarrateOption {
+	return func(opt *narrateOptions) {
+		opt.speakerId = speakerId
+	}
+}
 func WithEncoding(encoding pb.AudioEncoding) NarrateOption {
 	return func(opt *narrateOptions) {
 		opt.encoding = encoding
@@ -35,5 +42,6 @@ func newNarrateOptions() *narrateOptions {
 	return &narrateOptions{
 		speakerName:  DEFAULT_SPEAKER_NAME,
 		speakerStyle: DEFAULT_SPEAKER_STYLE,
+		speakerId:    DEFAULT_SPEAKER_ID,
 	}
 }
