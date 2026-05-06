@@ -20,6 +20,7 @@ import (
 
 type NarrationGenerator interface {
 	Do(ctx context.Context, path, text string, opts ...NarrateOption) error
+	Speakers() []*pb.SpeakerInfo
 }
 
 // =================================
@@ -81,6 +82,19 @@ func (g *ChunkedNarrationGenerator) Do(
 	}
 	return concatAudio(ps, path)
 }
+func (g *ChunkedNarrationGenerator) Speakers() []*pb.SpeakerInfo {
+	var speakers []*pb.SpeakerInfo
+	for _, s := range g.Handler.Speakers() {
+		speakers = append(speakers, &pb.SpeakerInfo{
+			Id:   int32(s.Id),
+			Name: fmt.Sprintf("%s (%s)", s.Name, s.Style),
+		})
+	}
+	return speakers
+}
+
+// Ensure NarrationGenerator implementation
+var _ NarrationGenerator = new(ChunkedNarrationGenerator)
 
 // -----------------
 // Helper components

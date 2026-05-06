@@ -52,6 +52,7 @@ func (n *VoiceVoxNarratorService) GetNarratorServiceMetadata(
 		Name:              NAME,
 		Version:           VERSION,
 		SupportedEncoding: SupportedEncoding,
+		Speakers:          n.Speaker.Speakers(),
 	}, nil
 }
 

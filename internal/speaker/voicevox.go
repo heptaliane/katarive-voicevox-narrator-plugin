@@ -14,6 +14,7 @@ import (
 type VoiceVoxHandler interface {
 	SpeakerId(name, style string) (int, error)
 	Narrate(ctx context.Context, text string, speakerId int) ([]byte, error)
+	Speakers() []*VoiceVoxSpeaker
 }
 
 // ============================
@@ -24,7 +25,7 @@ type VoiceVoxHandler interface {
 // HttpVoiceVoxHandler
 // ----------------------
 type HttpVoiceVoxHandler struct {
-	speakers []*voiceVoiceSpeaker
+	speakers []*VoiceVoxSpeaker
 	client   voicevox.ClientWithResponsesInterface
 }
 
@@ -66,14 +67,17 @@ func (h *HttpVoiceVoxHandler) Narrate(
 }
 func (h *HttpVoiceVoxHandler) SpeakerId(name, style string) (int, error) {
 	for _, speaker := range h.speakers {
-		if name == speaker.name && style == speaker.style {
-			return speaker.id, nil
+		if name == speaker.Name && style == speaker.Style {
+			return speaker.Id, nil
 		}
 	}
 	return 0, &errors.UnsupportedSpeakerError{
 		Name:  name,
 		Style: style,
 	}
+}
+func (h *HttpVoiceVoxHandler) Speakers() []*VoiceVoxSpeaker {
+	return h.speakers
 }
 
 // Ensure VoiceVoxHandler implementation
@@ -82,10 +86,10 @@ var _ VoiceVoxHandler = new(HttpVoiceVoxHandler)
 // -----------------
 // Helper components
 // -----------------
-type voiceVoiceSpeaker struct {
-	name  string
-	style string
-	id    int
+type VoiceVoxSpeaker struct {
+	Id    int
+	Name  string
+	Style string
 }
 
 func NewHttpVoiceVoxHandler(
@@ -109,13 +113,13 @@ func NewHttpVoiceVoxHandler(
 		}
 	}
 
-	var speakers []*voiceVoiceSpeaker
+	var speakers []*VoiceVoxSpeaker
 	for _, speaker := range *res.JSON200 {
 		for _, style := range speaker.Styles {
-			speakers = append(speakers, &voiceVoiceSpeaker{
-				name:  speaker.Name,
-				style: style.Name,
-				id:    style.Id,
+			speakers = append(speakers, &VoiceVoxSpeaker{
+				Name:  speaker.Name,
+				Style: style.Name,
+				Id:    style.Id,
 			})
 		}
 	}
