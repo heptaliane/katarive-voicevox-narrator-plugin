@@ -12,7 +12,7 @@ import (
 // Interfaces for VoiceVox handlers
 // ==============================
 type VoiceVoxHandler interface {
-	Narrate(ctx context.Context, text string, speakerId int) ([]byte, error)
+	Narrate(ctx context.Context, text string, options *NarrateOptions) ([]byte, error)
 	Speakers() []*VoiceVoxSpeaker
 }
 
@@ -31,11 +31,11 @@ type HttpVoiceVoxHandler struct {
 func (h *HttpVoiceVoxHandler) Narrate(
 	ctx context.Context,
 	text string,
-	speakerId int,
+	options *NarrateOptions,
 ) ([]byte, error) {
 	aqp := &voicevox.AudioQueryParams{
 		Text:    text,
-		Speaker: speakerId,
+		Speaker: options.SpeakerId,
 	}
 	aq, err := h.client.AudioQueryWithResponse(ctx, aqp)
 	if err != nil {
@@ -48,10 +48,12 @@ func (h *HttpVoiceVoxHandler) Narrate(
 		}
 	}
 
+	req := aq.JSON200
+	req.PostPhonemeLength = options.PhonemeLength
 	sp := &voicevox.SynthesisParams{
-		Speaker: speakerId,
+		Speaker: options.SpeakerId,
 	}
-	res, err := h.client.SynthesisWithResponse(ctx, sp, *aq.JSON200)
+	res, err := h.client.SynthesisWithResponse(ctx, sp, *req)
 	if err != nil {
 		return nil, err
 	}

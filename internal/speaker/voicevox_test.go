@@ -20,14 +20,18 @@ func TestHttpVoiceVoxHandlerNarrate(t *testing.T) {
 	}
 
 	cases := map[string]struct {
-		speakerId     int
+		options       speaker.NarrateOptions
 		expectedError error
 	}{
 		"default": {
-			speakerId: 3,
+			options: speaker.NarrateOptions{
+				SpeakerId: 3,
+			},
 		},
 		"invalid id": {
-			speakerId: -1,
+			options: speaker.NarrateOptions{
+				SpeakerId: -1,
+			},
 			expectedError: &errors.VoiceVoxConnectionError{
 				Body:     []byte(`{"detail":"Internal Server Error"}`),
 				Endpoint: "/audio_query",
@@ -45,7 +49,7 @@ func TestHttpVoiceVoxHandlerNarrate(t *testing.T) {
 					return err
 				}
 
-				_, err = handler.Narrate(ctx, "unittest", tc.speakerId)
+				_, err = handler.Narrate(ctx, "unittest", &tc.options)
 				return err
 			}()
 
