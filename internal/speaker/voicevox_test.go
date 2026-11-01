@@ -33,7 +33,7 @@ func TestHttpVoiceVoxHandlerNarrate(t *testing.T) {
 				SpeakerId: -1,
 			},
 			expectedError: &errors.VoiceVoxConnectionError{
-				Body:     []byte(`{"detail":"Internal Server Error"}`),
+				Body:     []byte(`{"message":"指定されたスタイルが見つかりませんでした。"}`),
 				Endpoint: "/audio_query",
 			},
 		},
