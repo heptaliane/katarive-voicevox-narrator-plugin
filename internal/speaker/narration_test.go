@@ -22,7 +22,7 @@ func TestChunkedNarrationGenerator(t *testing.T) {
 		t.Fatalf("Failed to initialize handler: %v", err)
 	}
 	generator := &speaker.ChunkedNarrationGenerator{
-		Chunker:  new(speaker.LineBreakTextChunker),
+		Chunker:  &speaker.DelimiterTextChunker{Delimiter: "\n"},
 		Handler:  handler,
 		CacheDir: basedir,
 	}
