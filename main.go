@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"strconv"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
@@ -16,12 +17,17 @@ const NAME string = "voicevox"
 const VERSION string = "v1"
 const DEFAULT_SERVER string = "http://localhost:50021"
 const ENV_SERVER string = "KATARIVE_VOICEVOX_SERVER"
+const DEFAULT_MAX_CHUNK_RUNES int = 400
+const ENV_MAX_CHUNK_RUNES string = "KATARIVE_VOICEVOX_MAX_CHUNK_RUNES"
 const CACHE_DIR string = ".cache/katarive-voicevox"
 
 var SupportedEncoding []pb.AudioEncoding = []pb.AudioEncoding{
 	pb.AudioEncoding_AUDIO_ENCODING_WAV,
 	pb.AudioEncoding_AUDIO_ENCODING_MP3,
 	pb.AudioEncoding_AUDIO_ENCODING_M4A,
+}
+var ChunkDelimiters []string = []string{
+	"\r\n", "\r", "\n", "。", "、",
 }
 
 type VoiceVoxNarratorService struct {
@@ -66,16 +72,30 @@ func GetenvWithDefault(key string, defaultValue string) string {
 	}
 	return defaultValue
 }
+func GetenvWithDefaultInt(key string, defaultValue int) (int, error) {
+	if v := os.Getenv(key); v != "" {
+		return strconv.Atoi(v)
+	}
+	return defaultValue, nil
+}
 
 func main() {
 	ctx := context.Background()
-
-	server := GetenvWithDefault(ENV_SERVER, DEFAULT_SERVER)
 
 	logger := hclog.New(&hclog.LoggerOptions{
 		Level:  hclog.Trace,
 		Output: os.Stderr,
 	})
+
+	server := GetenvWithDefault(ENV_SERVER, DEFAULT_SERVER)
+	maxChunkRunes, err := GetenvWithDefaultInt(ENV_MAX_CHUNK_RUNES, DEFAULT_MAX_CHUNK_RUNES)
+	if err != nil {
+		logger.Warn(
+			"Invalid value, using default",
+			"error", err,
+			"default", maxChunkRunes,
+		)
+	}
 
 	handler, err := speaker.NewHttpVoiceVoxHandler(ctx, server)
 	if err != nil {
@@ -88,10 +108,18 @@ func main() {
 	}
 	logger.Info("Connection with VoiceVox server is established.")
 
+	var chunkers []speaker.TextChunker
+	for _, d := range ChunkDelimiters {
+		chunkers = append(chunkers, &speaker.DelimiterTextChunker{Delimiter: d})
+	}
+
 	os.MkdirAll(CACHE_DIR, 0755)
 	narrator := &speaker.ChunkedNarrationGenerator{
-		Handler:  handler,
-		Chunker:  new(speaker.LineBreakTextChunker),
+		Handler: handler,
+		Chunker: speaker.NewRecursiveTextChunker(
+			&speaker.RuneCountTextChunkTrigger{Threshold: maxChunkRunes},
+			chunkers,
+		),
 		CacheDir: CACHE_DIR,
 	}
 
