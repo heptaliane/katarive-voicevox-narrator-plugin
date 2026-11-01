@@ -17,7 +17,26 @@ jobs:
       uses: actions/setup-go@v4
 
     - name: Setup FFmpeg
-      uses: federicocarboni/setup-ffmpeg@v3
+      uses: federicocarboni/setup-ffmpeg@8073ccb51e517ed576e6871c7f2360c6de4ebb7c
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
+
+    - name: Generate Dockerfile for cache
+      run: |
+        cat <<EOF > Dockerfile
+        FROM "voicevox/voicevox_engine:cpu-latest"
+        EOF
+
+    - name: Build and cache
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: false
+        load: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     - name: Test
       run: make test
